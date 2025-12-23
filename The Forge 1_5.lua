@@ -1,39 +1,115 @@
--- Forge v1.8 (Catraz Logic Edition)
-if game:GetService("CoreGui"):FindFirstChild("Forge_v1_8") then
-    game:GetService("CoreGui").Forge_v1_8:Destroy()
+-- Forge Specialist v2.0 (Official Stable)
+if game:GetService("CoreGui"):FindFirstChild("Forge_v2_0") then
+    game:GetService("CoreGui").Forge_v2_0:Destroy()
 end
 
 local Library = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
+local UIList = Instance.new("UIListLayout")
+local Title = Instance.new("TextLabel")
 local SpeedInput = Instance.new("TextBox")
 local MultiInput = Instance.new("TextBox")
 local HyperV2 = Instance.new("TextButton") 
-local ESPBtn = Instance.new("TextButton")
 local ForgeToggle = Instance.new("TextButton") 
+local ESPBtn = Instance.new("TextButton")
 local SpeedToggle = Instance.new("TextButton")
+local OpenBtn = Instance.new("TextButton")
 
 _G.MultiHitValue = 1
 _G.SpeedValue = 40 
 local sOn, v2On, eOn, forgeOn = false, false, false, false
 
-Library.Name = "Forge_v1_8"
+Library.Name = "Forge_v2_0"
 Library.Parent = game:GetService("CoreGui")
+Library.ResetOnSpawn = false
 
--- UI Frame Setup
+-- Tombol Buka Menu (Floating)
+OpenBtn.Name = "OpenBtn"
+OpenBtn.Parent = Library
+OpenBtn.Size = UDim2.new(0, 65, 0, 30)
+OpenBtn.Position = UDim2.new(0, 5, 0.4, 0)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+OpenBtn.Text = "OPEN"
+OpenBtn.Visible = false
+OpenBtn.Draggable = true
+Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 6)
+
+-- Main Frame Setup
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = Library
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-MainFrame.Size = UDim2.new(0, 160, 0, 330)
-MainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
+MainFrame.BorderSizePixel = 0
+MainFrame.Size = UDim2.new(0, 160, 0, 320)
+MainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
 MainFrame.Active = true
 MainFrame.Draggable = true
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
--- Fungsi Memanggil Remote Catraz (Blatant Logic)
-local function fireForgeRemote()
-    -- Mencari Remote Events yang digunakan untuk penempaan
-    local remotes = {
-        game:GetService("ReplicatedStorage"):FindFirstChild("ForgeEvent"),
-        game:GetService("ReplicatedStorage"):FindFirstChild("ProcessForge"),
+UIList.Parent = MainFrame
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
+UIList.Padding = UDim.new(0, 6)
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+Title.Text = "FORGE v2.0 STABLE"
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.GothamBold
+Title.Parent = MainFrame
+
+local function styleInput(obj, placeholder)
+    obj.PlaceholderText = placeholder
+    obj.Size = UDim2.new(0.9, 0, 0, 30)
+    obj.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    obj.TextColor3 = Color3.new(1, 1, 1)
+    obj.Font = Enum.Font.Gotham
+    obj.Parent = MainFrame
+    Instance.new("UICorner", obj).CornerRadius = UDim.new(0, 4)
+end
+
+local function styleBtn(obj, txt, color)
+    obj.Text = txt
+    obj.Size = UDim2.new(0.9, 0, 0, 35)
+    obj.BackgroundColor3 = color or Color3.fromRGB(45, 45, 45)
+    obj.TextColor3 = Color3.new(1, 1, 1)
+    obj.Font = Enum.Font.GothamBold
+    obj.TextSize = 10
+    obj.Parent = MainFrame
+    Instance.new("UICorner", obj).CornerRadius = UDim.new(0, 6)
+end
+
+-- Urutan Elemen UI
+styleInput(SpeedInput, "Speed: 40")
+styleInput(MultiInput, "Multi Hit: 1-10")
+styleBtn(HyperV2, "INSANE ATTACK", Color3.fromRGB(0, 140, 90))
+styleBtn(ForgeToggle, "BLATANT FORGE", Color3.fromRGB(0, 110, 190))
+styleBtn(ESPBtn, "ORE ESP", Color3.fromRGB(120, 0, 180))
+styleBtn(SpeedToggle, "ENABLE SPEED")
+
+-- [LOGIKA ESP]
+local function updateESP()
+    for _, item in pairs(workspace:GetDescendants()) do
+        if item:IsA("BasePart") and (item.Name:lower():find("ore") or item.Parent.Name:lower():find("ore")) then
+            if eOn then
+                if not item:FindFirstChild("Highlight") then
+                    local h = Instance.new("Highlight", item)
+                    h.FillColor = Color3.new(1, 1, 0)
+                    h.OutlineColor = Color3.new(1, 1, 1)
+                end
+            else
+                if item:FindFirstChild("Highlight") then item.Highlight:Destroy() end
+            end
+        end
+    end
+end
+
+-- [LOGIKA FORGE & INTERACTION]
+task.spawn(function()
+    while task.wait(0.05) do
+        if forgeOn then
+            pcall(function()
+                -- Klik tombol Forge di layar
+                for _, btn in pairs(game.Players.LocalPlayer.PlayerGui
         game:GetService("ReplicatedStorage"):FindFirstChild("Remotes"):FindFirstChild("Forge")
     }
     
