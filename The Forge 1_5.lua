@@ -1,39 +1,129 @@
---[[
-    FORGE SPECIALIST v5.2
-    Fix: Multi-Hit Damage (Server-Side Bypass)
-    Fitur: Fast Attack, Speed, FPS Boost, Fullbright
+--[[ 
+    FORGE UTILITY ALL-IN-ONE
+    - Fitur: WalkSpeed, FPS Boost, Fullbright
+    - UI: Toggle Buka/Tutup & Input Speed
 ]]
 
 local Player = game:GetService("Players").LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
-local RepStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
 
 -- 1. CLEANUP
-if CoreGui:FindFirstChild("Forge_v5_2") then
-    CoreGui.Forge_v5_2:Destroy()
+if PlayerGui:FindFirstChild("ForgeUtilityUI") then
+    PlayerGui.ForgeUtilityUI:Destroy()
 end
 
--- 2. SETUP UI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "Forge_v5_2"
-ScreenGui.Parent = CoreGui
-ScreenGui.ResetOnSpawn = false
+-- 2. UI SETUP
+local SG = Instance.new("ScreenGui", PlayerGui); SG.Name = "ForgeUtilityUI"
+SG.ResetOnSpawn = false
 
-local Main = Instance.new("Frame")
-Main.Name = "MainFrame"
-Main.Parent = ScreenGui
-Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-Main.Size = UDim2.new(0, 170, 0, 310)
-Main.Position = UDim2.new(0.4, 0, 0.3, 0)
-Main.Active = true
-Main.Draggable = true
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
-Instance.new("UIStroke", Main).Color = Color3.fromRGB(80, 80, 80)
+local Main = Instance.new("Frame", SG)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Main.Size = UDim2.new(0, 200, 0, 260)
+Main.Position = UDim2.new(0.5, -100, 0.4, 0)
+Main.Active = true; Main.Draggable = true
+Instance.new("UICorner", Main)
+local Stroke = Instance.new("UIStroke", Main); Stroke.Color = Color3.fromRGB(0, 150, 255)
 
-local OpenBtn = Instance.new("TextButton", ScreenGui)
-OpenBtn.Name = "OpenBtn"
-OpenBtn.Size = UDim2.new(0, 55, 0, 30)
+-- Header / Title
+local Title = Instance.new("TextLabel", Main)
+Title.Text = "FORGE UTILITY"; Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30); Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.GothamBold
+Instance.new("UICorner", Title)
+
+-- Layout
+local List = Instance.new("UIListLayout", Main)
+List.Padding = UDim.new(0, 8); List.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Instance.new("Frame", Main).BackgroundTransparency = 1; Main:GetChildren()[#Main:GetChildren()].Size = UDim2.new(1,0,0,45)
+
+-- 3. VARIABLES
+_G.SpeedValue = 16
+_G.FullBright = false
+
+-- 4. COMPONENTS
+local function makeBtn(txt, color)
+    local b = Instance.new("TextButton", Main)
+    b.Text = txt; b.Size = UDim2.new(0.9, 0, 0, 35)
+    b.BackgroundColor3 = color; b.TextColor3 = Color3.new(1, 1, 1)
+    b.Font = Enum.Font.GothamBold; Instance.new("UICorner", b)
+    return b
+end
+
+-- WalkSpeed Input
+local SpeedInput = Instance.new("TextBox", Main)
+SpeedInput.PlaceholderText = "Input Speed (Default 16)"; SpeedInput.Text = ""
+SpeedInput.Size = UDim2.new(0.9, 0, 0, 35)
+SpeedInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpeedInput.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", SpeedInput)
+
+local BrightBtn = makeBtn("FULLBRIGHT: OFF", Color3.fromRGB(50, 50, 50))
+local FpsBtn = makeBtn("FPS BOOST", Color3.fromRGB(50, 50, 50))
+local CloseBtn = makeBtn("CLOSE GUI (Numpad L)", Color3.fromRGB(120, 0, 0))
+
+-- 5. LOGIC FUNCTIONS
+-- WalkSpeed Loop
+RunService.Stepped:Connect(function()
+    if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+        Player.Character.Humanoid.WalkSpeed = _G.SpeedValue
+    end
+end)
+
+-- Fullbright Loop
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.FullBright then
+            Lighting.Brightness = 2
+            Lighting.ClockTime = 14
+            Lighting.FogEnd = 100000
+            Lighting.GlobalShadows = false
+        end
+    end
+end)
+
+-- 6. EVENTS
+SpeedInput.FocusLost:Connect(function()
+    _G.SpeedValue = tonumber(SpeedInput.Text) or 16
+end)
+
+BrightBtn.MouseButton1Click:Connect(function()
+    _G.FullBright = not _G.FullBright
+    BrightBtn.Text = _G.FullBright and "FULLBRIGHT: ON" or "FULLBRIGHT: OFF"
+    BrightBtn.BackgroundColor3 = _G.FullBright and Color3.fromRGB(0, 150, 80) or Color3.fromRGB(50, 50, 50)
+end)
+
+FpsBtn.MouseButton1Click:Connect(function()
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Material = Enum.Material.Plastic
+            v.Reflectance = 0
+        end
+        if v:IsA("Decal") or v:IsA("Texture") then
+            v:Destroy()
+        end
+        if v:IsA("ParticleEmitter") or v:IsA("Trail") then
+            v.Enabled = false
+        end
+    end
+    FpsBtn.Text = "FPS BOOSTED"
+    FpsBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 80)
+end)
+
+-- Tombol Tutup/Buka Manual (Bisa juga pakai tombol keyboard L)
+local function ToggleUI()
+    Main.Visible = not Main.Visible
+end
+
+CloseBtn.MouseButton1Click:Connect(ToggleUI)
+
+game:GetService("UserInputService").InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.L then
+        ToggleUI()
+    end
+end)
+
+print("Forge Utility Loaded! Press 'L' to toggle UI.")
 OpenBtn.Position = UDim2.new(0, 10, 0.4, 0)
 OpenBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 0)
 OpenBtn.Text = "OPEN"
