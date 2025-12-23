@@ -1,39 +1,154 @@
--- Forge Specialist v2.0 (Official Stable)
-if game:GetService("CoreGui"):FindFirstChild("Forge_v2_0") then
-    game:GetService("CoreGui").Forge_v2_0:Destroy()
+--[[
+    FORGE SPECIALIST v5.2
+    Fix: Multi-Hit Damage (Server-Side Bypass)
+    Fitur: Fast Attack, Speed, FPS Boost, Fullbright
+]]
+
+local Player = game:GetService("Players").LocalPlayer
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local RepStorage = game:GetService("ReplicatedStorage")
+
+-- 1. CLEANUP
+if CoreGui:FindFirstChild("Forge_v5_2") then
+    CoreGui.Forge_v5_2:Destroy()
 end
 
-local Library = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local UIList = Instance.new("UIListLayout")
-local Title = Instance.new("TextLabel")
-local SpeedInput = Instance.new("TextBox")
-local MultiInput = Instance.new("TextBox")
-local HyperV2 = Instance.new("TextButton") 
-local ForgeToggle = Instance.new("TextButton") 
-local ESPBtn = Instance.new("TextButton")
-local SpeedToggle = Instance.new("TextButton")
-local OpenBtn = Instance.new("TextButton")
+-- 2. SETUP UI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "Forge_v5_2"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
 
-_G.MultiHitValue = 1
-_G.SpeedValue = 40 
-local sOn, v2On, eOn, forgeOn = false, false, false, false
+local Main = Instance.new("Frame")
+Main.Name = "MainFrame"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Main.Size = UDim2.new(0, 170, 0, 310)
+Main.Position = UDim2.new(0.4, 0, 0.3, 0)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", Main).Color = Color3.fromRGB(80, 80, 80)
 
-Library.Name = "Forge_v2_0"
-Library.Parent = game:GetService("CoreGui")
-Library.ResetOnSpawn = false
-
--- Tombol Buka Menu (Floating)
+local OpenBtn = Instance.new("TextButton", ScreenGui)
 OpenBtn.Name = "OpenBtn"
-OpenBtn.Parent = Library
-OpenBtn.Size = UDim2.new(0, 65, 0, 30)
-OpenBtn.Position = UDim2.new(0, 5, 0.4, 0)
-OpenBtn.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+OpenBtn.Size = UDim2.new(0, 55, 0, 30)
+OpenBtn.Position = UDim2.new(0, 10, 0.4, 0)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 0)
 OpenBtn.Text = "OPEN"
 OpenBtn.Visible = false
-OpenBtn.Draggable = true
 Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 6)
 
+-- 3. LAYOUT
+local List = Instance.new("UIListLayout", Main)
+List.Padding = UDim.new(0, 7)
+List.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local Title = Instance.new("TextLabel", Main)
+Title.Text = "FORGE v5.2 FIX"
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.GothamBold
+
+-- Tombol X
+local Close = Instance.new("TextButton", Main)
+Close.Text = "X"; Close.Size = UDim2.new(0, 25, 0, 25); Close.Position = UDim2.new(1, -30, 0, 7)
+Close.BackgroundColor3 = Color3.new(0.7, 0, 0); Close.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", Close).CornerRadius = UDim.new(0, 5)
+
+-- Inputs
+local function createInput(placeholder)
+    local i = Instance.new("TextBox", Main)
+    i.PlaceholderText = placeholder; i.Size = UDim2.new(0.9, 0, 0, 30)
+    i.BackgroundColor3 = Color3.fromRGB(30, 30, 30); i.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", i).CornerRadius = UDim.new(0, 6)
+    return i
+end
+
+local SpeedInput = createInput("Speed: 16")
+local MultiInput = createInput("Damage Multi: 1-10")
+
+-- Control Variables
+_G.SpeedValue = 16
+_G.MultiValue = 1
+_G.FastAttack = false
+_G.SpeedEnabled = false
+
+-- 4. LOGIKA UTAMA (FIXED DAMAGE)
+local function getAttackRemote()
+    -- Mencari Remote Event serangan secara otomatis
+    return RepStorage:FindFirstChild("Attack", true) or RepStorage:FindFirstChild("Hit", true) or RepStorage:FindFirstChild("Swing", true)
+end
+
+task.spawn(function()
+    while task.wait() do
+        if _G.FastAttack then
+            pcall(function()
+                local tool = Player.Character and Player.Character:FindFirstChildOfClass("Tool")
+                if tool then
+                    -- Metode 1: Tool Activation (Visual)
+                    tool:Activate()
+                    
+                    -- Metode 2: Remote Bypass (Real Damage)
+                    local remote = getAttackRemote()
+                    if remote and remote:IsA("RemoteEvent") then
+                        for i = 1, _G.MultiValue do
+                            remote:FireServer() -- Mengirim sinyal serangan langsung
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- LOGIKA SPEED & PERFORMANCE
+RunService.Heartbeat:Connect(function()
+    if _G.SpeedEnabled and Player.Character and Player.Character:FindFirstChild("Humanoid") then
+        Player.Character.Humanoid.WalkSpeed = _G.SpeedValue
+    end
+end)
+
+local function ApplyPerf()
+    local L = game:GetService("Lighting")
+    L.GlobalShadows = false; L.Brightness = 3; L.ClockTime = 14
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("BasePart") then v.Material = Enum.Material.Plastic end
+        if v:IsA("Decal") or v:IsA("Texture") then v:Destroy() end
+    end
+end
+
+-- 5. BUTTONS
+local function makeBtn(txt)
+    local b = Instance.new("TextButton", Main)
+    b.Size = UDim2.new(0.9, 0, 0, 35); b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    b.TextColor3 = Color3.new(1, 1, 1); b.Font = Enum.Font.GothamBold; b.Text = txt
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+    return b
+end
+
+local AtkBtn = makeBtn("ATTACK: OFF")
+local SpdBtn = makeBtn("ENABLE SPEED")
+local PerfBtn = makeBtn("FPS + FULLBRIGHT")
+
+AtkBtn.MouseButton1Click:Connect(function()
+    _G.FastAttack = not _G.FastAttack
+    AtkBtn.BackgroundColor3 = _G.FastAttack and Color3.fromRGB(0, 180, 80) or Color3.fromRGB(50, 50, 50)
+    AtkBtn.Text = _G.FastAttack and "ATTACK: ON" or "ATTACK: OFF"
+end)
+
+SpdBtn.MouseButton1Click:Connect(function()
+    _G.SpeedEnabled = not _G.SpeedEnabled
+    SpdBtn.BackgroundColor3 = _G.SpeedEnabled and Color3.fromRGB(0, 180, 80) or Color3.fromRGB(50, 50, 50)
+end)
+
+PerfBtn.MouseButton1Click:Connect(function() ApplyPerf(); PerfBtn.Text = "DONE!" end)
+SpeedInput.FocusLost:Connect(function() _G.SpeedValue = tonumber(SpeedInput.Text) or 16 end)
+MultiInput.FocusLost:Connect(function() _G.MultiValue = tonumber(MultiInput.Text) or 1 end)
+Close.MouseButton1Click:Connect(function() Main.Visible = false; OpenBtn.Visible = true end)
+OpenBtn.MouseButton1Click:Connect(function() Main.Visible = true; OpenBtn.Visible = false end)
 -- Main Frame Setup
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = Library
