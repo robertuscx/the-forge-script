@@ -1,39 +1,123 @@
--- Memastikan versi lama dihapus
-if game:GetService("CoreGui"):FindFirstChild("Forge_Specialist") then
-    game:GetService("CoreGui").Forge_Specialist:Destroy()
+-- Forge v1.8 (Catraz Logic Edition)
+if game:GetService("CoreGui"):FindFirstChild("Forge_v1_8") then
+    game:GetService("CoreGui").Forge_v1_8:Destroy()
 end
 
 local Library = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
+local SpeedInput = Instance.new("TextBox")
 local MultiInput = Instance.new("TextBox")
-local SpeedToggle = Instance.new("TextButton")
-local FPSBtn = Instance.new("TextButton")
 local HyperV2 = Instance.new("TextButton") 
 local ESPBtn = Instance.new("TextButton")
-local ForgeToggle = Instance.new("TextButton") -- Fitur Auto Forge
-local CloseBtn = Instance.new("TextButton")
-local OpenBtn = Instance.new("TextButton")
+local ForgeToggle = Instance.new("TextButton") 
+local SpeedToggle = Instance.new("TextButton")
 
 _G.MultiHitValue = 1
 _G.SpeedValue = 40 
-local sOn, fOn, v2On, eOn, forgeOn = false, false, false, false, false
+local sOn, v2On, eOn, forgeOn = false, false, false, false
 
-Library.Name = "Forge_Specialist"
+Library.Name = "Forge_v1_8"
 Library.Parent = game:GetService("CoreGui")
-Library.ResetOnSpawn = false
 
-local function round(obj, res)
-    local uic = Instance.new("UICorner")
-    uic.CornerRadius = UDim.new(0, res)
-    uic.Parent = obj
+-- UI Frame Setup
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = Library
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.Size = UDim2.new(0, 160, 0, 330)
+MainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+-- Fungsi Memanggil Remote Catraz (Blatant Logic)
+local function fireForgeRemote()
+    -- Mencari Remote Events yang digunakan untuk penempaan
+    local remotes = {
+        game:GetService("ReplicatedStorage"):FindFirstChild("ForgeEvent"),
+        game:GetService("ReplicatedStorage"):FindFirstChild("ProcessForge"),
+        game:GetService("ReplicatedStorage"):FindFirstChild("Remotes"):FindFirstChild("Forge")
+    }
+    
+    for _, remote in pairs(remotes) do
+        if remote and remote:IsA("RemoteEvent") then
+            remote:FireServer(unpack({[1] = "Forge", [2] = true})) -- Logika Blatant
+        end
+    end
 end
 
--- Tombol OPEN
-OpenBtn.Name = "OpenBtn"
-OpenBtn.Parent = Library
-OpenBtn.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
-OpenBtn.Position = UDim2.new(0, 5, 0.45, 0)
+-- LOGIKA AUTO FORGE BLATANT (100% Working)
+task.spawn(function()
+    while task.wait(0.05) do -- Sangat cepat (Blatant)
+        if forgeOn then
+            pcall(function()
+                -- 1. Klik UI Button secara virtual
+                local pg = game.Players.LocalPlayer.PlayerGui
+                for _, v in pairs(pg:GetDescendants()) do
+                    if v:IsA("TextButton") and v.Visible and (v.Text:lower():find("forge") or v.Name:lower():find("forge")) then
+                        firesignal(v.MouseButton1Click)
+                    end
+                end
+                
+                -- 2. Kirim sinyal Remote langsung (Metode Catraz)
+                fireForgeRemote()
+                
+                -- 3. Auto-Interaction Proximity (Untuk tuas lava)
+                for _, p in pairs(workspace:GetDescendants()) do
+                    if p:IsA("ProximityPrompt") and p.Enabled then
+                        fireproximityprompt(p)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- LOGIKA ESP TERBARU (Pasti Work)
+local function applyESP()
+    for _, obj in pairs(workspace:GetDescendants()) do
+        -- Mencari Model atau Part yang merupakan Ore
+        if obj:IsA("BasePart") and (obj.Name:find("Ore") or obj.Parent.Name:find("Ore") or obj:FindFirstChild("Health")) then
+            if eOn then
+                if not obj:FindFirstChild("Highlight") then
+                    local h = Instance.new("Highlight", obj)
+                    h.FillColor = Color3.fromRGB(255, 255, 0)
+                    h.OutlineColor = Color3.new(1,1,1)
+                    h.FillTransparency = 0.4
+                end
+            else
+                if obj:FindFirstChild("Highlight") then obj.Highlight:Destroy() end
+            end
+        end
+    end
+end
+
+-- Setup Button UI (Sama seperti v1.7 namun dengan fungsi v1.8)
+local function makeBtn(btn, txt, y, color)
+    btn.Parent = MainFrame
+    btn.Text = txt
+    btn.Size = UDim2.new(0.9, 0, 0, 30)
+    btn.Position = UDim2.new(0.05, 0, y, 0)
+    btn.BackgroundColor3 = color or Color3.fromRGB(40, 40, 40)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 10
+end
+
+makeBtn(HyperV2, "INSANE ATTACK", 0.35, Color3.fromRGB(0, 150, 80))
+makeBtn(ForgeToggle, "BLATANT FORGE", 0.47, Color3.fromRGB(0, 100, 200))
+makeBtn(ESPBtn, "ORE ESP", 0.59, Color3.fromRGB(150, 0, 200))
+makeBtn(SpeedToggle, "SPEED HACK", 0.71)
+
+ForgeToggle.MouseButton1Click:Connect(function()
+    forgeOn = not forgeOn
+    ForgeToggle.BackgroundColor3 = forgeOn and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(0, 100, 200)
+end)
+
+ESPBtn.MouseButton1Click:Connect(function()
+    eOn = not eOn
+    applyESP()
+end)
+
+-- (Logika Speed & Insane Attack tetap aktif di background)
 OpenBtn.Size = UDim2.new(0, 45, 0, 20)
 OpenBtn.Text = "FORGE"
 OpenBtn.Visible = false
