@@ -1,39 +1,76 @@
---[[ 
-    FORGE UTILITY ALL-IN-ONE
-    - Fitur: WalkSpeed, FPS Boost, Fullbright
-    - UI: Toggle Buka/Tutup & Input Speed
-]]
+-- Memuat Library UI (Librari sederhana yang support Mobile/Delta)
+-- Script ini menggunakan GUI standar agar mudah di-custom dan digeser
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("The Forge - Delta Booster", "DarkTheme")
 
-local Player = game:GetService("Players").LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
-local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
+-- Variabel Default
+local _G = {
+    Speed = 16,
+    FullBright = false
+}
 
--- 1. CLEANUP
-if PlayerGui:FindFirstChild("ForgeUtilityUI") then
-    PlayerGui.ForgeUtilityUI:Destroy()
-end
+-- Tab Utama
+local Main = Window:NewTab("Main Features")
+local Section = Main:NewSection("Player & Visual")
 
--- 2. UI SETUP
-local SG = Instance.new("ScreenGui", PlayerGui); SG.Name = "ForgeUtilityUI"
-SG.ResetOnSpawn = false
+-- 1. SPEED HACK (Dengan Input)
+Section:NewTextBox("Set Speed", "Masukkan angka (Default 16)", function(txt)
+    _G.Speed = tonumber(txt) or 16
+end)
 
-local Main = Instance.new("Frame", SG)
-Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Main.Size = UDim2.new(0, 200, 0, 260)
-Main.Position = UDim2.new(0.5, -100, 0.4, 0)
-Main.Active = true; Main.Draggable = true
-Instance.new("UICorner", Main)
-local Stroke = Instance.new("UIStroke", Main); Stroke.Color = Color3.fromRGB(0, 150, 255)
+Section:NewToggle("Enable Speed", "Aktifkan lari cepat", function(state)
+    getgenv().SpeedLoop = state
+    task.spawn(function()
+        while getgenv().SpeedLoop do
+            if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+                game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = _G.Speed
+            end
+            task.wait(0.1)
+        end
+        -- Reset speed saat dimatikan
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+    end)
+end)
 
--- Header / Title
-local Title = Instance.new("TextLabel", Main)
-Title.Text = "FORGE UTILITY"; Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30); Title.TextColor3 = Color3.new(1, 1, 1)
-Title.Font = Enum.Font.GothamBold
-Instance.new("UICorner", Title)
+-- 2. FULLBRIGHT (Working di Goa/Tempat Gelap)
+Section:NewToggle("FullBright", "Menerangi semua tempat", function(state)
+    _G.FullBright = state
+    if state then
+        game:GetService("Lighting").Brightness = 2
+        game:GetService("Lighting").ClockTime = 14
+        game:GetService("Lighting").FogEnd = 100000
+        game:GetService("Lighting").GlobalShadows = false
+        game:GetService("Lighting").OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+    else
+        game:GetService("Lighting").Brightness = 1
+        game:GetService("Lighting").GlobalShadows = true
+    end
+end)
 
--- Layout
+-- 3. FPS BOOSTER (Hanya ubah tekstur, tidak hapus objek)
+local Settings = Window:NewTab("Settings")
+local VisualSection = Settings:NewSection("Performance")
+
+VisualSection:NewButton("FPS Boost (Texture Low)", "Mengurangi beban render tanpa hapus warna", function()
+    local terrain = game.Workspace:FindFirstChildOfClass('Terrain')
+    terrain.WaterWaveSize = 0
+    terrain.WaterWaveSpeed = 0
+    terrain.WaterReflectance = 0
+    terrain.WaterTransparency = 0
+    
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("Part") or v:IsA("UnionOperation") or v:IsA("MeshPart") then
+            v.Material = Enum.Material.SmoothPlastic -- Tekstur paling ringan tapi warna tetap ada
+            v.Reflectance = 0
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            v.Transparency = 0.5 -- Mengurangi detail gambar tanpa menghapusnya
+        end
+    end
+    print("FPS Boost Activated!")
+end)
+
+-- Toggle Hide UI (Khusus Delta biasanya menggunakan Tombol Ikon)
+-- Library ini otomatis membuat tombol toggle kecil di layar
 local List = Instance.new("UIListLayout", Main)
 List.Padding = UDim.new(0, 8); List.HorizontalAlignment = Enum.HorizontalAlignment.Center
 Instance.new("Frame", Main).BackgroundTransparency = 1; Main:GetChildren()[#Main:GetChildren()].Size = UDim2.new(1,0,0,45)
